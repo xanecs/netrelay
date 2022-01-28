@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netrelay
+spec:
+  selector:
+    matchLabels:
+      app: netrelay
+  template:
+    metadata:
+      labels:
+        app: netrelay
+    spec:
+      serviceAccountName: netrelay
+      containers:
+      - name: netrelay
+        image: ghcr.io/xanecs/netrelay:latest
+        env:
+        - name: KUBE_SECRET
+          value: "tailscale-state"
+        - name: AUTH_KEY
+          valueFrom:
+            secretKeyRef:
+              key: AUTH_KEY
+              name: tailscale-auth
+              optional: true
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+      volumes:
+      - name: config-volume
+        configMap:
+          name: netrelay-config
