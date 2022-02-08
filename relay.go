@@ -12,35 +12,46 @@ type Relay struct {
 }
 
 func (r *Relay) Start() error {
-	listener, err := net.Listen(r.Proto, r.Bind)
-	if err != nil {
-		return err
-	}
-	defer listener.Close()
-	for {
-		conn, err := listener.Accept()
+	if r.Proto == "tcp" {
+		listener, err := net.Listen(r.Proto, r.Bind)
 		if err != nil {
 			return err
 		}
-		go forward(conn, r.Target, r.Proto)
+		defer listener.Close()
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return err
+			}
+			go forwardTCP(conn, r.Target, r.Proto)
+		}
+	} else if r.Proto == "udp" {
+		proxy, err := NewUDPProxy(r.Target, r.Bind)
+		if err != nil {
+			return err
+		}
+		if err := proxy.Start(); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func forward(inbound net.Conn, target string, proto string) error {
+func forwardTCP(inbound net.Conn, target string, proto string) error {
 	outbound, err := net.Dial(proto, target)
 	if err != nil {
 		return err
 	}
 	closer := make(chan struct{}, 2)
-	go copy(closer, inbound, outbound)
-	go copy(closer, outbound, inbound)
+	go copyTCP(closer, inbound, outbound)
+	go copyTCP(closer, outbound, inbound)
 	<-closer
 	inbound.Close()
 	outbound.Close()
 	return nil
 }
 
-func copy(closer chan struct{}, dst io.Writer, src io.Reader) {
+func copyTCP(closer chan struct{}, dst io.Writer, src io.Reader) {
 	_, _ = io.Copy(dst, src)
 	closer <- struct{}{}
 }

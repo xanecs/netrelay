@@ -1,8 +1,12 @@
 namespace: netrelay
 resources:
-- service.yaml
+- rbac.yaml
 - deployment.yaml
 configMapGenerator:
 - name: netrelay-config
   files:
   - relay.json
+secretGenerator:
+- name: tailscale-auth
+  literals:
+  - AUTH_KEY=

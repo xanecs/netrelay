@@ -10,28 +10,31 @@ spec:
     metadata:
       labels:
         app: netrelay
+        instance: tradfri
     spec:
-      serviceAccountName: netrelay
+      nodeSelector:
+        location: bentrup
       containers:
       - name: netrelay
         image: ghcr.io/xanecs/netrelay:latest
-        env:
-        - name: KUBE_SECRET
-          value: "tailscale-state"
-        - name: AUTH_KEY
-          valueFrom:
-            secretKeyRef:
-              key: AUTH_KEY
-              name: tailscale-auth
-              optional: true
-        volumeMounts:
-        - name: config-volume
-          mountPath: /etc/config
         resources:
           limits:
-            memory: "128Mi"
-            cpu: "500m"
+            memory: "64Mi"
+            cpu: "50m"
+        ports:
+        - containerPort: 5684
+          protocol: UDP
+          name: coaps
+        - containerPort: 5683
+          protocol: UDP
+          name: coap
+        env:
+        - name: NETRELAY_CONFIG
+          value: /config/relay.json
+        volumeMounts:
+          - mountPath: /config
+            name: config
       volumes:
-      - name: config-volume
+      - name: config
         configMap:
           name: netrelay-config

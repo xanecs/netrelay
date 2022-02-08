@@ -8,7 +8,7 @@ import (
 func main() {
 	loc := os.Getenv("NETRELAY_CONFIG")
 	if loc == "" {
-		loc = "deploy/relay.json"
+		loc = "relay.json"
 	}
 	fp, err := os.Open(loc)
 	if err != nil {

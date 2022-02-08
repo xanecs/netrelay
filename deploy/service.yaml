@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tradfri
+spec:
+  type: ClusterIP
+  selector:
+    app: netrelay
+    instance: tradfri
+  ports:
+  - port: 5683
+    name: coap
+    protocol: UDP
+  - port: 5684
+    name: coaps
+    protocol: UDP
